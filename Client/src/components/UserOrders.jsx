@@ -23,12 +23,12 @@ const UserOrders = () => {
     }, [orders])
   
     return (
-      <main className='w-screen min-h-screen flex items-center justify-start flex-col bg-primary'>
+      <main className='w-screen min-h-screen flex items-center justify-start flex-col bg-white'>
         <Header />
         <div className='w-full flex flex-col items-start justify-center mt-40 px-6 md:px-24 2xl:px-96 gap-12 pb-24'>
           {userOrders?.length > 0 ? (
             <>
-              {userOrders.map((item, i) => (
+              {[...userOrders].reverse().map((item, i) => (
                 <OrdersData key={i} index={i} data={item} admin={false} />
               ))}
             </>

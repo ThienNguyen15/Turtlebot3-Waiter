@@ -20,7 +20,7 @@ const DashboardOrders = () => {
     <div className='flex items-center justify-center flex-col pt-6 w-full gap-4'>
       {orders ? (
         <>
-          {orders.map((item, i) => (
+          {[...orders].reverse().map((item, i) => (
             <OrdersData key={i} index={i} data={item} admin={true} />
           ))}
         </>
