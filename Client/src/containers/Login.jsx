@@ -21,10 +21,10 @@ import { useDispatch, useSelector } from 'react-redux'
 import { alertInfo, alertWarning } from '../context/actions/alertActions'
 
 const Login = () => {
-  const [userEmail, setUserEmail] = useState("")
+  const [userEmail, setUserEmail] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
-  const [password, setPassword] = useState("")
-  const [confirm_password, setConfirm_password] = useState("")
+  const [password, setPassword] = useState('')
+  const [confirm_password, setConfirm_password] = useState('')
 
   const firebaseAuth = getAuth(app)
   const provider = new GoogleAuthProvider()
@@ -37,35 +37,57 @@ const Login = () => {
 
   useEffect(() => {
     if(user) {
-      navigate("/", { replace : true })
+      navigate('/', { replace : true })
     }
   }, [user])
 
+  // const loginWithGoogle = async () => {
+  //   // console.log('Clicked')
+  //   await signInWithPopup(firebaseAuth, provider).then((userCred) => {
+  //     firebaseAuth.onAuthStateChanged((cred) => {
+  //       if (cred) {
+  //         cred.getIdToken().then((token) => {
+  //           validateUserJWTToken(token).then((data) => {
+  //             // console.log(data)
+  //             dispatch(setUserDetails(data))
+  //           })
+  //           navigate('/', { replace: true })
+  //         })
+  //       }
+  //     })
+  //   })
+  // }
+
   const loginWithGoogle = async () => {
-    // console.log('Clicked')
-    await signInWithPopup(firebaseAuth, provider).then((userCred) => {
-      firebaseAuth.onAuthStateChanged((cred) => {
-        if (cred) {
-          cred.getIdToken().then((token) => {
-            validateUserJWTToken(token).then((data) => {
-              // console.log(data)
-              dispatch(setUserDetails(data))
-            })
-            navigate("/", { replace: true })
-          })
-        }
-      })
-    })
+    try {
+      const userCred = await signInWithPopup(firebaseAuth, provider)
+  
+      const cred = firebaseAuth.currentUser
+  
+      if (cred) {
+        const token = await cred.getIdToken()
+        const data = await validateUserJWTToken(token)
+        dispatch(setUserDetails(data))
+        navigate('/', { replace: true })
+      }
+    } catch (error) {
+      if (error.code === 'auth/popup-closed-by-user') {
+        console.log('User cancelled the login process')
+      } else {
+        console.error('Error during Google login:', error.message)
+      }
+    }
   }
+  
 
   const signUpWithEmailPassword = async () => {
-    if (userEmail === "" || password === "" || confirm_password === "") {
-      dispatch(alertInfo("Required fields should not be empty"))
+    if (userEmail === '' || password === '' || confirm_password === '') {
+      dispatch(alertInfo('Required fields should not be empty'))
     } else {
       if (password === confirm_password) {
-        setUserEmail("")
-        setConfirm_password("")
-        setPassword("")
+        setUserEmail('')
+        setConfirm_password('')
+        setPassword('')
         await createUserWithEmailAndPassword(
           firebaseAuth,
           userEmail,
@@ -78,12 +100,12 @@ const Login = () => {
                   // console.log(data)
                   dispatch(setUserDetails(data))
                 })
-                navigate("/", { replace: true })
+                navigate('/', { replace: true })
               })
             }
           })
         })
-        // console.log("Equal")
+        // console.log('Equal')
       } else {
         dispatch(alertWarning("Password doesn't match"))
       }
@@ -91,7 +113,7 @@ const Login = () => {
   }
 
   const signInWithEmailPassword = async () => {
-    if(userEmail !== "" && password !== "") {
+    if(userEmail !== '' && password !== '') {
       await signInWithEmailAndPassword(
         firebaseAuth, 
         userEmail, 
@@ -104,12 +126,12 @@ const Login = () => {
                 // console.log(data)
                 dispatch(setUserDetails(data))
               })
-              navigate("/", { replace: true })
+              navigate('/', { replace: true })
             })
           }
         })
       })
-      // console.log("Equal")
+      // console.log('Equal')
     } else {
       dispatch(alertWarning("Password doesn't match"))
     }
@@ -134,12 +156,12 @@ const Login = () => {
 
         {/* Welcome Text */}
         <p className='text-3xl font-semibold text-headingColor'>Welcome Back</p>
-        <p className='text-xl text-textColor -mt-6'>{isSignUp ? "Sign Up" : "Sign In"} with following</p>
+        <p className='text-xl text-textColor -mt-6'>{isSignUp ? 'Sign Up' : 'Sign In'} with following</p>
 
         {/* Input Section */}
         <div className=' w-full flex flex-col items-center justify-center gap-6 px-4 md:px-12 py-4'>
           <LoginInput 
-            placeHolder={"Email Here"}
+            placeHolder={'Email Here'}
             icon={<FaEnvelope className='text-xl text-textColor' />}
             inputState={userEmail}
             inputStateFunc={setUserEmail} 
@@ -148,7 +170,7 @@ const Login = () => {
           />
 
           <LoginInput 
-            placeHolder={"Password Here"}
+            placeHolder={'Password Here'}
             icon={<FaLock className='text-xl text-textColor' />}
             inputState={password}
             inputStateFunc={setPassword} 
@@ -158,7 +180,7 @@ const Login = () => {
 
           {isSignUp && (
             <LoginInput
-              placeHolder={"Confirm Password Here"}
+              placeHolder={'Confirm Password Here'}
               icon={<FaLock className='text-xl text-textColor' />}
               inputState={confirm_password}
               inputStateFunc={setConfirm_password} 
@@ -168,7 +190,7 @@ const Login = () => {
           )}
 
           {!isSignUp ? (
-            <p>Doesn't have an account:{""}
+            <p>Doesn't have an account:{''}
                 <motion.button {...buttonClick} 
                   className='text-red-400 underline cursor-pointer bg-transparent' 
                   onClick={() => setIsSignUp(true)}
@@ -177,7 +199,7 @@ const Login = () => {
                 </motion.button>
             </p>
           ) : (
-            <p>Already have an account:{""}
+            <p>Already have an account:{''}
                 <motion.button {...buttonClick} 
                   className='text-red-400 underline cursor-pointer bg-transparent' 
                   onClick={() => setIsSignUp(false)}

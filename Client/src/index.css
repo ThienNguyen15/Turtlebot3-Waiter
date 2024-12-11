@@ -4,6 +4,8 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 body {
@@ -11,6 +13,67 @@ body {
     "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
     sans-serif;
 }
+
+.border-danger {
+  border-color: #fca5a5 !important;
+}
+
+.nav-avatar {
+  margin-left: 18px;
+}
+
+.nav-link-active {
+  font-size: 1.678rem;
+  color: #b91c1c;
+  font-weight: 600;
+  padding: 8px 16px;
+  transition: all 0.1s ease-in-out;
+}
+
+.nav-link-active:hover {
+  color: #b91c1c;
+}
+
+.nav-link-inactive {
+  font-size: 1.432rem;
+  color: #1f2937;
+  padding: 8px 16px;
+  transition: all 0.1s ease-in-out;
+}
+
+.nav-link-inactive:hover {
+  color: #b91c1c;
+}
+
+
+.MuiPaper-root {
+  width: 100%;
+}
+
+/* Giới hạn chiều rộng của dropdown menu */
+.MuiMenu-paper {
+  max-width: 90px !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Giới hạn kích thước của nút dropdown */
+.MuiTablePagination-select {
+  max-width: 100px !important;
+  overflow: hidden;
+}
+
+canvas {
+  border: 1px solid black;
+  width: 400px;
+}
+
+h3 {
+margin-left: 32px;
+}
+
+
 
 @tailwind base;
 @tailwind components;
