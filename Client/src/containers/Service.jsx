@@ -54,7 +54,7 @@ const Service = () => {
                     margin: 0,
                 }} 
             />
-            <Rosconnection rosUrl='ws://192.168.213.75:9090' rosDomainId='30' setRos={setRos} setStatus={setStatus} />
+            <Rosconnection rosUrl='ws://localhost:9090' rosDomainId='30' setRos={setRos} setStatus={setStatus} />
             {ros &&
             <>
                 <Row className="w-100 d-flex justify-content-around align-items-start" style={{ marginTop: '-20px', padding: '0' }}>

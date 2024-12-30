@@ -63,8 +63,7 @@ const ImuData = ({ros}) => {
           return { ...prevState, ...newData }
         })
     })
-  
-  })
+  }, [ros])
   
   return (
     <>
