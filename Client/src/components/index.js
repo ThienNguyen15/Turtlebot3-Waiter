@@ -39,3 +39,4 @@ export {default as CmdData} from './Robot Map/CmdData'
 export {default as ImuData} from './Robot Map/ImuData'
 export {default as MapandOdom} from './Robot Map/MapandOdom'
 
+export {default as RealTimeDB} from './RealTimeDB/RealTimeDB'

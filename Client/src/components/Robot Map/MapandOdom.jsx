@@ -1,9 +1,18 @@
+import ROS_Config from '../../config/ros.config'
 import { useEffect, useRef } from 'react'
-import ROSLIB from 'roslib'
 import Card from 'react-bootstrap/Card'
+import ROSLIB from 'roslib'
+window.ROSLIB = ROSLIB
 
-const MapandOdom = ({ros}) => {
-  const canvasRef = useRef(null)
+function quaternionToYaw(orientation) {
+  const { x, y, z, w } = orientation
+  const yawRad = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
+  return yawRad * (180 / Math.PI)
+}
+
+const MapandOdom = ({ ros, onOdomUpdate }) => {
+  const mapCanvasRef = useRef(null)
+  const robotCanvasRef = useRef(null)
 
   useEffect(() => {
     if (!ros)
@@ -11,22 +20,23 @@ const MapandOdom = ({ros}) => {
 
     var mapClient = new ROSLIB.Topic({
       ros: ros,
-      name: '/map',
-      messageType: 'nav_msgs/OccupancyGrid'
+      name: ROS_Config.MAP_TOPIC,
+      messageType: ROS_Config.MAP_MSG,
     })
 
     var odomClient = new ROSLIB.Topic({
       ros: ros,
-      name: '/odom',
-      messageType: 'nav_msgs/Odometry'
+      // name: ROS_Config.ODOM_TOPIC,
+      // messageType: ROS_Config.ODOM_MSG,
+      name: ROS_Config.AMCL_POSE_TOPIC,
+      messageType: ROS_Config.AMCL_POSE_MSG,
     })
 
     var mapWidth
     var mapHeight
     var mapResolution
     var mapData
-    // var mapOriginX
-    // var mapOriginY
+    let originX = 0, originY = 0
 
     mapClient.subscribe(function(map) {
       mapWidth = map.info.width
@@ -34,13 +44,14 @@ const MapandOdom = ({ros}) => {
       mapResolution = map.info.resolution
       mapData = map.data
 
-      // mapOriginX = map.info.origin.position.x
-      // mapOriginY = map.info.origin.position.y
+      originX = map.info.origin.position.x
+      originY = map.info.origin.position.y
 
-      const canvas = canvasRef.current
-      const context = canvas.getContext('2d')
-      canvas.width = mapWidth
-      canvas.height = mapHeight
+      const mapCanvas = mapCanvasRef.current
+      const mapContext = mapCanvas.getContext('2d')
+      const scaleFactor = 1
+      mapCanvas.width = mapWidth * scaleFactor
+      mapCanvas.height = mapHeight * scaleFactor
 
       for (var i = 0; i < mapWidth * mapHeight; i++) {
           var occupancy = mapData[i]
@@ -48,54 +59,74 @@ const MapandOdom = ({ros}) => {
           var col = i % mapWidth
 
           if (occupancy === 100) {
-              context.fillStyle = '#000000'
+              mapContext.fillStyle = '#000000'
           } else if (occupancy === 0) {
-              context.fillStyle = '#ffffff'
+              mapContext.fillStyle = '#ffffff'
           } else {
               var gray = 255 - Math.round(occupancy * 2.55)
               var color = 'rgb(' + gray + ',' + gray + ',' + gray + ')'
-              context.fillStyle = color
+              mapContext.fillStyle = color
           }
 
-          context.fillRect(col, mapHeight - row - 1, 1, 1)
+          mapContext.fillRect(
+            col * scaleFactor,
+            (mapHeight - row - 1) * scaleFactor,
+            scaleFactor,
+            scaleFactor
+          )
       }
     })
-
-    var position
-    var orientation
     
     odomClient.subscribe(function(odom) {
-      position = odom.pose.pose.position
-      orientation = odom.pose.pose.orientation
+      const position = odom.pose.pose.position
+      const orientation = odom.pose.pose.orientation
+      const yaw = quaternionToYaw(orientation)
+      const odomState = { position, yaw }
+      if (onOdomUpdate) onOdomUpdate(odomState)
       console.log('Position: ' + position.x + ',' + position.y + ',' + position.z)
       console.log('Orientation: ' + orientation.x + ',' + orientation.y + ',' + orientation.z + ',' + orientation.w)
 
-      var canvas = document.getElementById('map-canvas')
-      var context = canvas.getContext('2d')
+      const robotCanvas = robotCanvasRef.current
+      const robotContext = robotCanvas.getContext('2d')
 
-      // const canvasX = canvas.width / 2 + (position.x) / mapResolution
-      // const canvasY = canvas.height / 2 - (position.y) / mapResolution
-      const canvasX = canvas.width / 2 + (position.x) / mapResolution
-      const canvasY = canvas.height / 2 - (position.y) / mapResolution
-      
+      robotCanvas.width = mapWidth
+      robotCanvas.height = mapHeight
+      robotContext.clearRect(0, 0, robotCanvas.width, robotCanvas.height)
 
-      context.beginPath()
-      context.fillStyle = '#FF0000'
-      context.arc(canvasX , canvasY, 1.45, 0, 2 * Math.PI)
-      context.fill()
+      const robotPositionX = (position.x - originX) / mapResolution
+      const robotPositionY = mapHeight - 1 - ((position.y - originY) / mapResolution)
+
+      robotContext.beginPath()
+      robotContext.fillStyle = '#FF0000'
+      robotContext.arc(robotPositionX, robotPositionY, 3, 0, 2 * Math.PI)
+      robotContext.fill()
     })
-  })
+
+    return () => {
+      mapClient.unsubscribe()
+      odomClient.unsubscribe()
+    }
+  }, [ros, onOdomUpdate])
   
   return (
     <>
-      <Card className='mb-4' style={{ width: '33rem' }}>
+      <Card className='mb-4' style={{ width: '33rem', height: '32rem', marginLeft: '0.84cm' }}>
         <Card.Body>
-            <Card.Title>Map and Odometry</Card.Title>
-            <Card.Subtitle className='mb-2 text-muted'>Subscribe map and odom</Card.Subtitle>
+            <Card.Title className="text-end">Map and Odometry</Card.Title>
+            <Card.Subtitle className='mb-2 text-muted text-end'>Subscribe Map and Odom</Card.Subtitle>
             <Card.Text>
-            <div className='d-flex flex-column justify-content-center align-items-center' style={{ width: '100%' }}>
-              <canvas id='map-canvas' ref={canvasRef}></canvas>
-            </div>
+              <div style={{ position: 'relative', width: '100%', height: '26rem' }}>
+                <canvas
+                  id="map-canvas"
+                  ref={mapCanvasRef}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                ></canvas>
+                <canvas
+                  id="robot-canvas"
+                  ref={robotCanvasRef}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                ></canvas>
+              </div>
             </Card.Text>
         </Card.Body>
       </Card>
@@ -104,3 +135,49 @@ const MapandOdom = ({ros}) => {
 }
 
 export default MapandOdom
+
+
+
+// const MapandOdom = ({ ros, onOdomUpdate }) => {
+//   useEffect(() => {
+//     if (!ros) return
+
+//     var viewer = new window.ROS2D.Viewer({
+//       divID: "nav_div",
+//       width: 100,
+//       height: 100,
+//     })
+
+//     var navClient = new window.NAV2D.OccupancyGridClientNav({
+//       ros: ros,
+//       rootObject: viewer.scene,
+//       viewer: viewer,
+//       serverName: "/navigate_to_pose",
+//       withOrientation: true,
+//       topic: "/map",
+//       continuous: true
+//     })
+//   }, [ros])
+  
+//   return (
+//     <>
+//       <Card className='mb-4' style={{ width: '33rem', height: '32rem', marginLeft: '0.84cm' }}>
+//         <Card.Body>
+//             <Card.Title className="text-end">Map and Odometry</Card.Title>
+//             <Card.Subtitle className='mb-2 text-muted text-end'>Subscribe Map and Odom</Card.Subtitle>
+//             <Card.Text>
+//             <div className='d-flex flex-column justify-content-center align-items-center' style={{ width: '100%' }}>
+//               <div 
+//                 id="nav_div" 
+//                 style={{ display: 'block', width: '80%', height: '1rem' }}
+//               >
+//               </div>
+//             </div>
+//             </Card.Text>
+//         </Card.Body>
+//       </Card>
+//     </>
+//   )
+// }
+
+// export default MapandOdom

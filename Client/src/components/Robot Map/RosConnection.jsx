@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import ROSLIB from 'roslib'
+window.ROSLIB = ROSLIB
 
 const Rosconnection = ({ rosUrl, rosDomainId, setRos, setStatus }) => {
 

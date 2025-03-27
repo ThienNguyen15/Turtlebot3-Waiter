@@ -1,12 +1,14 @@
+import ROS_Config from '../config/ros.config'
 import React, { useState } from 'react'
 import { Header } from '../components'
-import { CmdData, MapandOdom, Rosconnection, ImuData } from '../components'
+import { CmdData, MapandOdom, Rosconnection, ImuData, RealTimeDB } from '../components'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { Row, Col } from 'react-bootstrap'
 import { Ros2 } from '../assets'
 
 const Service = () => {
     const [ros, setRos] = useState(null)
+    const [odom, setOdom] = useState(null)
     const [isJoystickActive, setJoystickActive] = useState(false)
 
     const [status, setStatus] = useState('N/A')
@@ -54,20 +56,23 @@ const Service = () => {
                     margin: 0,
                 }} 
             />
-            <Rosconnection rosUrl='ws://localhost:9090' rosDomainId='30' setRos={setRos} setStatus={setStatus} />
+            <Rosconnection rosUrl={ROS_Config.ROS_URL} rosDomainId={ROS_Config.ROS_DOMAIN_ID} setRos={setRos} setStatus={setStatus} />
             {ros &&
             <>
-                <Row className="w-100 d-flex justify-content-around align-items-start" style={{ marginTop: '-20px', padding: '0' }}>
-                  <Col md={5}>
+                <Row className="w-100 d-flex justify-content-between align-items-start" style={{ marginTop: '-50px', padding: '0' }}>
+                  <Col md={3}>
                   <div>
                     <CmdData ros={ros} setJoystickActive={setJoystickActive} />
                   </div>
-                  <div className="mt-4">
+                  {/* <div style={{ marginTop: '1.95rem' }}>
                     <ImuData ros={ros} />
-                  </div>
+                  </div> */}
                   </Col>
-                  <Col md={5} className='d-flex justify-content-center align-items-start'>
-                    <MapandOdom ros={ros} />
+                  <Col md={4}>
+                    <RealTimeDB ros={ros} odom={odom} />
+                  </Col>
+                  <Col md={5}>
+                    <MapandOdom ros={ros} onOdomUpdate={setOdom} />
                   </Col>
                 </Row>
             </>

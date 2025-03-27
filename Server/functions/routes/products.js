@@ -296,7 +296,7 @@ const createOrder = async (customer, intent, res) => {
       payment_method_types: intent.payment_method_types,
       status: intent.payment_status,
       customer: intent.customer_details,
-      shipping_details: intent.shipping_details,
+      // shipping_details: intent.shipping_details,
       userId: customer.metadata.user_id,
       items: JSON.parse(customer.metadata.cart),
       total: customer.metadata.total,

@@ -1,6 +1,8 @@
+import ROS_Config from '../../config/ros.config'
 import React, { useEffect, useState } from 'react'
-import ROSLIB from 'roslib'
 import Card from 'react-bootstrap/Card'
+import ROSLIB from 'roslib'
+window.ROSLIB = ROSLIB
 
 const ImuData = ({ros}) => {
   const [imuData, setImuData] = useState({})
@@ -11,8 +13,8 @@ const ImuData = ({ros}) => {
 
     var imuTopic = new ROSLIB.Topic({
         ros: ros,
-        name: 'imu',
-        messageType: 'sensor_msgs/Imu'
+        name: ROS_Config.IMU_TOPIC,
+        messageType: ROS_Config.IMU_MSG
     })
 
     // Calculate Euler
@@ -69,8 +71,8 @@ const ImuData = ({ros}) => {
     <>
       <Card className='mb-4' style={{ width: '30rem' }}>
         <Card.Body>
-            <Card.Title>Inertial Measurement Unit Data</Card.Title>
-            <Card.Subtitle className='mb-2 text-muted'>Subscribe imu data</Card.Subtitle>
+            <Card.Title>Inertial Measurement Unit</Card.Title>
+            <Card.Subtitle className='mb-2 text-muted'>Subscribe Imu Data</Card.Subtitle>
             <Card.Text>
                 <p>Roll: {imuData.roll}</p>
                 <p>Pitch: {imuData.pitch}</p>
