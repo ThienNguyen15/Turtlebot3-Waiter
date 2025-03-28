@@ -101,15 +101,15 @@ const CmdData = ({ ros, setJoystickActive }) => {
     sendCommand(0, 0)
   }
 
-  const batteryValue = 31;
+  const batteryValue = 80;
 
   const getFillColor = (value) => {
     if (value < 20) return '#ff3333';
     if (value < 40) return '#ffd633';
-    return '#228B22';
+    return '#00cc44';
   };
 
-const fillColor = getFillColor(batteryValue);
+  const fillColor = getFillColor(batteryValue);
 
   return (
     <Card className="mb-4" style={{ width: "30rem", height: "32rem" }}> {/* height 25 combined with Imu */}
@@ -161,7 +161,7 @@ const fillColor = getFillColor(batteryValue);
             {/* Left column */}
             <div style={{ flex: 1 }}>
               <p style={{ marginTop: '0.29rem' }}><strong>Position</strong></p>
-              <p>X: {position.x}, Y: {position.y}</p>
+              <p>[2D] X: {position.x}, Y: {position.y}</p>
               <p>Orientation: {orientation}°</p>
               <br />
               <p style={{ marginTop: '0.29rem' }}><strong>Velocity</strong></p>
@@ -173,6 +173,7 @@ const fillColor = getFillColor(batteryValue);
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', width: '10rem' }}>
               <p style={{ marginRight: '0.2rem' }}><strong>Battery</strong></p>
               <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', marginRight: '-2.8rem' }}>
+                
                 <div style={{ transform: 'scaleX(0.69)' }}>
                   <BatteryGauge 
                     value={batteryValue}
@@ -182,19 +183,20 @@ const fillColor = getFillColor(batteryValue);
                       batteryBody: { strokeWidth: 1, cornerRadius: 6 },
                       batteryCap: { width: 1, strokeWidth: 1},
                       batteryMeter: { fill: fillColor },
-                      valueText: {
-                        style: {
-                          fontSize: 15,
-                          fontWeight: 'bold',
-                          fill: '#333'
-                        }
-                      }
+                      readingText: {
+                        lightContrastColor: 'black',
+                        darkContrastColor: 'black',
+                        lowBatteryColor: 'black',
+                        fontFamily: 'Helvetica',
+                        fontSize: 14,
+                        showPercentage: true,
+                      },
                     }}
                   />
                 </div>
+
               </div>
             </div>
-
           </div>
         </Card.Text>
       </Card.Body>
@@ -203,6 +205,48 @@ const fillColor = getFillColor(batteryValue);
 }
 
 export default CmdData
+
+
+
+// {
+//   batteryBody: {
+//     strokeWidth: 4,
+//     cornerRadius: 6,
+//     fill: 'none',
+//     strokeColor: '#111'
+//   },
+//   batteryCap: {
+//     fill: 'none',
+//     strokeWidth: 4,
+//     strokeColor: '#111',
+//     cornerRadius: 2,
+//     capToBodyRatio: 0.4
+//   },
+//   batteryMeter: {
+//     fill: 'green',
+//     lowBatteryValue: 15,
+//     lowBatteryFill: 'red',
+//     outerGap: 1,
+//     noOfCells: 1, // more than 1, will create cell battery
+//     interCellsGap: 1
+//   },
+//   readingText: {
+//     lightContrastColor: '#111',
+//     darkContrastColor: '#fff',
+//     lowBatteryColor: 'red',
+//     fontFamily: 'Helvetica',
+//     fontSize: 14,
+//     showPercentage: true
+//   },
+//   chargingFlash: {
+//     scale: undefined,
+//     fill: 'orange',
+//     animated: true,
+//     animationDuration: 1000
+//   },
+// }
+
+
 
 // const CmdData = ({ ros, setJoystickActive }) => {
 //   const [cmdVelPublisher, setCmdVelPublisher] = useState(null)

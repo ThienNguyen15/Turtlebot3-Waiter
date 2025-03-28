@@ -26,7 +26,7 @@ const Service = () => {
                 Connection:&nbsp;
                 <span id="status"
                   style={{
-                    color: status === 'SUCCESSFUL' ? 'green' : 'black',
+                    color: status === 'SUCCESSFUL' ? '#00cc44' : '#ff3333',
                     fontWeight: 'bold',
                     fontSize: '1.8rem',
                   }}
