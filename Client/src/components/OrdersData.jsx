@@ -118,16 +118,26 @@ const OrdersData = ({ index, data, admin }) => {
   
           <div className='flex items-start justify-start flex-col gap-2 px-6 ml-auto w-full md:w-460'>
             <h1 className='text-lg text-headingColor font-semibold'>
-              {data.customer.name}
+              {data.table ? `Table ${data.table}` : ''}
             </h1>
-  
-            <p className='text-base text-headingColor -mt-2'>
-              {data.customer.email}
-            </p>
-  
-            <p className='text-base text-textColor -mt-2'>
-              {data.customer.phone}
-            </p>
+
+            {data.customer.name !== "None" && (
+              <p className='text-base text-textColor -mt-2'>
+                {data.customer.name}
+              </p>
+            )}
+
+            {data.customer.email !== "None" && (
+              <p className='text-base text-headingColor -mt-2'>
+                {data.customer.email}
+              </p>
+            )}
+
+            {data.customer.phone !== "None" && (
+              <p className='text-base text-textColor -mt-2'>
+                {data.customer.phone}
+              </p>
+            )}
           </div>
         </div>
       </motion.div>

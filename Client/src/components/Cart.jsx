@@ -19,14 +19,15 @@ const Cart = () => {
   const cart = useSelector((state) => state.cart)
   const user = useSelector((state) => state.user)
   const [total, setTotal] = useState(0)
+  const [tableNumber, setTableNumber] = useState('')
 
   useEffect(() => {
     let TotaL = 0
     if (cart) {
-      cart.map((data) => {
-        TotaL = TotaL + data.product_price * data.quantity
-        setTotal(TotaL)
+      cart.forEach((item) => {
+        TotaL += item.product_price * item.quantity
       })
+      setTotal(TotaL)
     }
   }, [cart])
 
@@ -35,6 +36,7 @@ const Cart = () => {
       user: user,
       cart: cart,
       total: total,
+      table: tableNumber,
     }
     axios
       .post(`${baseURL}/api/products/create-checkout-session`, { data })
@@ -65,7 +67,21 @@ const Cart = () => {
         </motion.i>
       </div>
 
-      <div className='flex-1 flex flex-col items-start justify-start rounded-t-3xl bg-zinc-900 h-full py-6  gap-3 relative'>
+      <div className='flex-1 flex flex-col items-center justify-center rounded-t-3xl bg-zinc-900 h-full py-6  gap-3 relative'>
+        <div className="w-full flex flex-col items-center justify-center">
+          <input
+            id="tableInput"
+            type="text"
+            placeholder="Note Your Table Number!"
+            value={tableNumber ? `Table ${tableNumber}` : ""}
+              onChange={(e) => {
+                const inputVal = e.target.value.replace(/\D/g, "");
+                setTableNumber(inputVal);
+              }}
+            className="bg-orange-400 w-[50%] px-4 py-3 text-center text-headingColor placeholder-white rounded-2xl font-bold"
+          />
+        </div>
+
         {cart && cart?.length > 0 ? (
           <>
             <div className='flex flex-col w-full items-start justify-start gap-3 h-[65%] overflow-y-scroll scrollbar-none px-4'>
@@ -132,7 +148,7 @@ export const CartItemCard = ({ index, data }) => {
 
   useEffect(() => {
     setItemTotal(data.product_price * data.quantity)
-  }, [itemTotal, cart])
+  }, [data.product_price, data.quantity]) /* [itemTotal, cart] */
 
   return (
     <motion.div

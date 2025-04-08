@@ -139,7 +139,7 @@ const CmdData = ({ ros, setJoystickActive }) => {
               />
             </Form.Group>
 
-            <div style={{ marginTop: "1rem" }}>
+            <div style={{ marginTop: "1rem", transform: "translateX(10px)" }}>
               <Joystick
                 size={110}
                 baseColor="#B3D7FF"

@@ -190,19 +190,21 @@ router.get('/getAllCartItems/:user_id', async (req, res) => {
 })
 
 router.post('/create-checkout-session', async (req, res) => {
+  const { data } = req.body
+
   const customer = await stripe.customers.create({
     metadata: {
-      user_id: req.body.data.user.user_id,
+      user_id: data.user.user_id,
       cart: JSON.stringify(
-        req.body.data.cart.map((item) => ({
+        data.cart.map((item) => ({
           productId: item.productId,
           product_name: item.product_name,
           product_price: item.product_price,
           quantity: item.quantity,
         }))
       ),
-      // cart: JSON.stringify(req.body.data.cart), URL too long 
-      total: req.body.data.total,
+      total: data.total,
+      table: data.table
     },
   })
 
@@ -222,6 +224,20 @@ router.post('/create-checkout-session', async (req, res) => {
       quantity: item.quantity,
     }
   })
+
+  if (data.table) {
+    line_items.unshift({
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: `Table: ${data.table}`,
+          description: 'Customer Table Note',
+        },
+        unit_amount: 0,
+      },
+      quantity: 1,
+    });
+  }
 
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
@@ -291,11 +307,12 @@ const createOrder = async (customer, intent, res) => {
     const data = {
       intentId: intent.id,
       orderId: orderId,
-      amount: intent.amount_total,
-      created: intent.created,
+      // amount: intent.amount_total,
+      // created: intent.created,
       payment_method_types: intent.payment_method_types,
       status: intent.payment_status,
       customer: intent.customer_details,
+      table: customer.metadata.table,
       // shipping_details: intent.shipping_details,
       userId: customer.metadata.user_id,
       items: JSON.parse(customer.metadata.cart),
