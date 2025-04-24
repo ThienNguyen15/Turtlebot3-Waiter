@@ -6,7 +6,7 @@ import { FcClearFilters, FcGoogle } from 'react-icons/fc'
 import { GiChickenOven, GiFruitBowl, GiNoodles } from 'react-icons/gi'
 import { IoIceCreamSharp, IoStar } from 'react-icons/io5'
 import { LuWallet } from 'react-icons/lu'
-import { MdDelete, MdFoodBank, MdLogout, MdSearch, MdShoppingCart } from 'react-icons/md'
+import { MdDelete, MdFoodBank, MdKeyboardVoice, MdLogout, MdSearch, MdShoppingCart } from 'react-icons/md'
 import { PiCurrencyCircleDollar } from 'react-icons/pi'
 import { RiDrinksFill } from 'react-icons/ri'
 
@@ -33,6 +33,7 @@ export {
   LuWallet,
   MdDelete,
   MdFoodBank,
+  MdKeyboardVoice,
   MdLogout,
   MdSearch,
   MdShoppingCart,

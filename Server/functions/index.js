@@ -7,9 +7,6 @@ const serviceAccountKey = require('./serviceAccountKey.json')
 const express = require('express')
 const app = express()
 
-// Body parser for our JSON data
-app.use(express.json())
-
 // Cross orgin
 const cors = require('cors')
 app.use(cors({ origin: true }))
@@ -21,12 +18,19 @@ app.use((req, res, next) => {
 // Firebase credentials
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccountKey),
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET
 })
 
 // Api endpoints
 app.get('/', (req, res) => {
-  return res.send('hello word')
+  return res.send('Start!')
 })
+
+const voiceRoute = require('./routes/voice')
+app.use('/api/voice/', voiceRoute)
+
+// Body parser for our JSON data
+app.use(express.json())
 
 const userRoute = require('./routes/user')
 app.use('/api/users', userRoute)

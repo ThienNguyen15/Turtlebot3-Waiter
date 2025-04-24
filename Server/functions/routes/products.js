@@ -1,12 +1,14 @@
 const router = require('express').Router()
+
 const admin = require('firebase-admin')
 const db = admin.firestore()
 db.settings({ ignoreUndefinedProperties: true })
+
 const express = require('express')
 const stripe = require('stripe')(process.env.STRIPE_KEY)
 
 // Add new product
-router.post('/create', async (req, res) => {
+router.post('/create', express.json(), async (req, res) => {
   try {
     const id = Date.now()
     const data = {
@@ -62,7 +64,7 @@ router.delete('/delete/:productId', async (req, res) => {
 })
 
 // Create cart
-router.post('/addCartItem/:userId', async (req, res) => {
+router.post('/addCartItem/:userId', express.json(), async (req, res) => {
   const userId = req.params.userId
   const productId = req.body.productId
 
@@ -189,7 +191,7 @@ router.get('/getAllCartItems/:user_id', async (req, res) => {
   })()
 })
 
-router.post('/create-checkout-session', async (req, res) => {
+router.post('/create-checkout-session', express.json(), async (req, res) => {
   const { data } = req.body
 
   const customer = await stripe.customers.create({
@@ -306,6 +308,7 @@ const createOrder = async (customer, intent, res) => {
     const orderId = Date.now()
     const data = {
       intentId: intent.id,
+      is_reach: 0,
       orderId: orderId,
       // amount: intent.amount_total,
       // created: intent.created,
@@ -372,7 +375,7 @@ router.get('/orders', async (req, res) => {
 })
 
 // Update the Orders Status
-router.post('/updateOrders/:order_id', async (req, res) => {
+router.post('/updateOrders/:order_id', express.json(), async (req, res) => {
   const order_id = req.params.order_id
   const progress = req.query.progress
 

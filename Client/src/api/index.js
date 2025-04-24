@@ -1,8 +1,6 @@
 import axios from 'axios'
 
-export const baseURL = "http://localhost:5001/turtlebot3-waiter/us-central1/app"
-
-// http://127.0.0.1:5001/turtlebot3-waiter/us-central1/app
+export const baseURL = process.env.REACT_APP_BASE_URL
 
 export const validateUserJWTToken = async (token) => {
     try {
@@ -13,6 +11,37 @@ export const validateUserJWTToken = async (token) => {
       } catch (err) {
         return null
       }
+}
+
+// Voice
+export const voiceAudio = async (userId, fileBlob) => {
+  try {
+    const form = new FormData()
+    form.append('file', fileBlob, 'voice.webm')
+
+    const res = await axios.post(
+      `${baseURL}/api/voice/${userId}`,
+      form,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    )
+
+    return res.data
+  } catch (err) {
+    console.error('voiceAudio error', err)
+    return null
+  }
+}
+
+export const confirmVoice = async (voiceId) => {
+  try {
+    const res = await axios.post(
+      `${baseURL}/api/voice/confirm/${voiceId}`
+    )
+    return res.data
+  } catch (err) {
+    console.error('ConfirmVoice error', err)
+    return null
+  }
 }
 
 // Add new product
