@@ -8,26 +8,26 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import { Row, Col } from 'react-bootstrap'
 import { Turtlebot } from '../../assets'
 
-// const tables = [
-//   { description: "Table0", id: 0, name: "Table0", x: 0.00, y: 0.00, yaw: 90.00 },
-//   { description: "Table1", id: 1, name: "Table1", x: 0.10, y: 0.10, yaw: 90.00 },
-//   { description: "Table2", id: 2, name: "Table2", x: -0.20, y: -0.20, yaw: 90.00 },
-//   { description: "Table3", id: 3, name: "Table3", x: 0.30, y: 0.30, yaw: 90.00 },
-//   { description: "Table4", id: 4, name: "Table4", x: -0.40, y: -0.40, yaw: 90.00 },
-//   { description: "Table5", id: 5, name: "Table5", x: 0.50, y: 0.50, yaw: 90.00 },
-//   { description: "Table6", id: 6, name: "Table6", x: -0.60, y: -0.60, yaw: 90.00 },
-//   { description: "Table7", id: 7, name: "Table7", x: 0.70, y: 0.70, yaw: 90.00 },
-//   { description: "Table8", id: 8, name: "Table8", x: -0.80, y: -0.80, yaw: 90.00 },
-//   { description: "Table9", id: 9, name: "Table9", x: 0.90, y: 0.90, yaw: 90.00 },
-//   { description: "Table10", id: 10, name: "Table10", x: 1.00, y: 1.00, yaw: 90.00 }
-// ]
-
 const tables = [
-  { description: "Center", id: 0, name: "Center", x: -0.393977, y: -0.754116, yaw: 17.336042 },
-  { description: "Table1", id: 1, name: "Table1", x: -0.291475, y: -1.501925, yaw: -95.423714 },
-  { description: "Table2", id: 2, name: "Table2", x: 0.525429, y: -1.832006, yaw: 82.580696},
-  { description: "Kitchen", id: 10, name: "Kitchen", x: 0.618463, y: -0.695112, yaw: 110.532781 }
+  { description: "Table0", id: 0, name: "Table0", x: 0.00, y: 0.00, yaw: 90.00 },
+  { description: "Table1", id: 1, name: "Table1", x: 0.10, y: 0.10, yaw: 90.00 },
+  { description: "Table2", id: 2, name: "Table2", x: -0.20, y: -0.20, yaw: 90.00 },
+  { description: "Table3", id: 3, name: "Table3", x: 0.30, y: 0.30, yaw: 90.00 },
+  { description: "Table4", id: 4, name: "Table4", x: -0.40, y: -0.40, yaw: 90.00 },
+  { description: "Table5", id: 5, name: "Table5", x: 0.50, y: 0.50, yaw: 90.00 },
+  { description: "Table6", id: 6, name: "Table6", x: -0.60, y: -0.60, yaw: 90.00 },
+  { description: "Table7", id: 7, name: "Table7", x: 0.70, y: 0.70, yaw: 90.00 },
+  { description: "Table8", id: 8, name: "Table8", x: -0.80, y: -0.80, yaw: 90.00 },
+  { description: "Table9", id: 9, name: "Table9", x: 0.90, y: 0.90, yaw: 90.00 },
+  { description: "Table10", id: 10, name: "Table10", x: 1.00, y: 1.00, yaw: 90.00 }
 ]
+
+// const tables = [
+//   { description: "Center", id: 0, name: "Center", x: -0.393977, y: -0.754116, yaw: 17.336042 },
+//   { description: "Table1", id: 1, name: "Table1", x: -0.291475, y: -1.501925, yaw: -95.423714 },
+//   { description: "Table2", id: 2, name: "Table2", x: 0.525429, y: -1.832006, yaw: 82.580696},
+//   { description: "Kitchen", id: 10, name: "Kitchen", x: 0.618463, y: -0.695112, yaw: 110.532781 }
+// ]
 
 // const generateTurtlebotState = () => {
 //   return {
