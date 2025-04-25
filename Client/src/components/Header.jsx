@@ -103,7 +103,7 @@ const Header = ({ isJoystickActive }) => {
 
       // Update UI
       const unsub = onSnapshot(
-        doc(dbFirestore, 'voice', result.voiceId),
+        doc(dbFirestore, 'voices', result.voiceId),
         snap => {
           const d = snap.data()
           if (!d) return
@@ -149,7 +149,7 @@ const Header = ({ isJoystickActive }) => {
   const handleConfirm = async yes => {
     if (!voiceId) return
     if (yes)   await confirmVoice(voiceId)
-    else       await updateDoc(doc(dbFirestore, 'voice', voiceId), { processed: 'No' })
+    else       await updateDoc(doc(dbFirestore, 'voices', voiceId), { processed: 'No' })
     setRecordedData(prev => ({ ...prev, isOpen: false }))
   }
 

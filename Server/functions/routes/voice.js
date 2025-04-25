@@ -38,7 +38,7 @@ router.post('/:userId', (req, res) => {
       const buffer  = Buffer.concat(chunks)
       const userId  = req.params.userId
       const voiceId = uuidv4()
-      const path    = `Voice/${userId}/${voiceId}.webm`
+      const path    = `Voices/${userId}/${voiceId}.webm`
 
       try {
         const ref = bucket.file(path)
@@ -48,7 +48,7 @@ router.post('/:userId', (req, res) => {
           expires: '03-01-2500'
         })
 
-        await db.collection('voice').doc(voiceId).set({
+        await db.collection('voices').doc(voiceId).set({
           customerId:   userId,
           audioUrl,
           storagePath:  path,
@@ -71,7 +71,7 @@ router.post('/:userId', (req, res) => {
 
 router.post('/confirm/:voiceId', async (req, res) => {
   try {
-    await db.collection('voice').doc(req.params.voiceId)
+    await db.collection('voices').doc(req.params.voiceId)
             .update({ true_request: 'Yes' })
     res.send({ status: 'confirmed' })
   } catch (err) {

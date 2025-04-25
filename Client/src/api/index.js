@@ -20,7 +20,7 @@ export const voiceAudio = async (userId, fileBlob) => {
     form.append('file', fileBlob, 'voice.webm')
 
     const res = await axios.post(
-      `${baseURL}/api/voice/${userId}`,
+      `${baseURL}/api/voices/${userId}`,
       form,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     )
@@ -35,7 +35,7 @@ export const voiceAudio = async (userId, fileBlob) => {
 export const confirmVoice = async (voiceId) => {
   try {
     const res = await axios.post(
-      `${baseURL}/api/voice/confirm/${voiceId}`
+      `${baseURL}/api/voices/confirm/${voiceId}`
     )
     return res.data
   } catch (err) {

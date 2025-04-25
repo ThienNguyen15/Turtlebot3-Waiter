@@ -475,7 +475,7 @@ def finalize_record(doc):
 if __name__ == "__main__":
     os.makedirs("uploads", exist_ok=True)
 
-    db_fs.collection("voice").on_snapshot(on_voice_snapshot)
+    db_fs.collection("voices").on_snapshot(on_voice_snapshot)
     print("🚀 Listening to Firestore 'voice' collection…")
 
     while True:

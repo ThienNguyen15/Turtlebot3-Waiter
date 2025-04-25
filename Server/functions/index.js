@@ -27,7 +27,7 @@ app.get('/', (req, res) => {
 })
 
 const voiceRoute = require('./routes/voice')
-app.use('/api/voice/', voiceRoute)
+app.use('/api/voices/', voiceRoute)
 
 // Body parser for our JSON data
 app.use(express.json())
