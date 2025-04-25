@@ -7,6 +7,7 @@ import jellyfish
 from pydub.utils import which
 from pydub import AudioSegment
 from difflib import SequenceMatcher
+from dotenv import load_dotenv
 import firebase_admin
 from firebase_admin import credentials, firestore, storage, db as rtdb
 
@@ -26,6 +27,7 @@ MODEL_PATH = r"C:/GIT/_CapStone Project_/Voice Recognition/Speech2Text/whisper.c
 # UPLOAD_FOLDER = "uploads"
 # os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+load_dotenv()
 storage_bucket = os.getenv('STORAGE_BUCKET')
 database_url   = os.getenv('DATABASE_URL')
 
@@ -38,26 +40,26 @@ db_fs     = firestore.client()
 bucket = storage.bucket()
 
 # --------------------- Command Dictionary ---------------------
-# TABLE_POSITIONS = [
-#   { "description": "Table0", "id": 0, "name": "Table0", "x": 0.00, "y": 0.00, "yaw": 90.00 },
-#   { "description": "Table1", "id": 1, "name": "Table1", "x": 0.10, "y": 0.10, "yaw": 90.00 },
-#   { "description": "Table2", "id": 2, "name": "Table2", "x": -0.20, "y": -0.20, "yaw": 90.00 },
-#   { "description": "Table3", "id": 3, "name": "Table3", "x": 0.30, "y": 0.30, "yaw": 90.00 },
-#   { "description": "Table4", "id": 4, "name": "Table4", "x": -0.40, "y": -0.40, "yaw": 90.00 },
-#   { "description": "Table5", "id": 5, "name": "Table5", "x": 0.50, "y": 0.50, "yaw": 90.00 },
-#   { "description": "Table6", "id": 6, "name": "Table6", "x": -0.60, "y": -0.60, "yaw": 90.00 },
-#   { "description": "Table7", "id": 7, "name": "Table7", "x": 0.70, "y": 0.70, "yaw": 90.00 },
-#   { "description": "Table8", "id": 8, "name": "Table8", "x": -0.80, "y": -0.80, "yaw": 90.00 },
-#   { "description": "Table9", "id": 9, "name": "Table9", "x": 0.90, "y": 0.90, "yaw": 90.00 },
-#   { "description": "Table10", "id": 10, "name": "Table10", "x": 1.00, "y": 1.00, "yaw": 90.00 }
-# ]
-
 TABLE_POSITIONS = [
-  { "description": "Table0", "id": 0, "name": "Table0", "x":-0.393977, "y":-0.754116, "yaw":17.336042 },
-  { "description": "Table1", "id": 1, "name": "Table1", "x":-0.291475, "y":-1.501925, "yaw":-95.423714 },
-  { "description": "Table2", "id": 2, "name": "Table2", "x":0.525429, "y":-1.832006, "yaw":82.580696 },
-  { "description": "Table10", "id": 10, "name": "Table10", "x":0.618463, "y":-0.695112, "yaw":110.532781 }
+  { "description": "Table0", "id": 0, "name": "Table0", "x": 0.00, "y": 0.00, "yaw": 90.00 },
+  { "description": "Table1", "id": 1, "name": "Table1", "x": 0.10, "y": 0.10, "yaw": 90.00 },
+  { "description": "Table2", "id": 2, "name": "Table2", "x": -0.20, "y": -0.20, "yaw": 90.00 },
+  { "description": "Table3", "id": 3, "name": "Table3", "x": 0.30, "y": 0.30, "yaw": 90.00 },
+  { "description": "Table4", "id": 4, "name": "Table4", "x": -0.40, "y": -0.40, "yaw": 90.00 },
+  { "description": "Table5", "id": 5, "name": "Table5", "x": 0.50, "y": 0.50, "yaw": 90.00 },
+  { "description": "Table6", "id": 6, "name": "Table6", "x": -0.60, "y": -0.60, "yaw": 90.00 },
+  { "description": "Table7", "id": 7, "name": "Table7", "x": 0.70, "y": 0.70, "yaw": 90.00 },
+  { "description": "Table8", "id": 8, "name": "Table8", "x": -0.80, "y": -0.80, "yaw": 90.00 },
+  { "description": "Table9", "id": 9, "name": "Table9", "x": 0.90, "y": 0.90, "yaw": 90.00 },
+  { "description": "Table10", "id": 10, "name": "Table10", "x": 1.00, "y": 1.00, "yaw": 90.00 }
 ]
+
+# TABLE_POSITIONS = [
+#   { "description": "Table0", "id": 0, "name": "Table0", "x":-0.393977, "y":-0.754116, "yaw":17.336042 },
+#   { "description": "Table1", "id": 1, "name": "Table1", "x":-0.291475, "y":-1.501925, "yaw":-95.423714 },
+#   { "description": "Table2", "id": 2, "name": "Table2", "x":0.525429, "y":-1.832006, "yaw":82.580696 },
+#   { "description": "Table10", "id": 10, "name": "Table10", "x":0.618463, "y":-0.695112, "yaw":110.532781 }
+# ]
 
 start_table_id = 0
 end_table_id = 10
@@ -295,7 +297,7 @@ def parse_multiple_orders(order_str):
     return segments
 
 # --------------------- Firestore Upload Functions ---------------------
-def order_command_to_database(table_id, order_items):
+def order_command_to_database(table_id, order_items, user_id="None"):
     """
         Push order command(s) to Database in the correct format
     """
@@ -340,7 +342,7 @@ def order_command_to_database(table_id, order_items):
         "status": "cash",
         "table": table_id,
         "total": total,
-        "userId": "None"
+        "userId": user_id
     }
 
     db_fs.collection("orders").document(str(order_data["orderId"])).set(order_data)
@@ -371,10 +373,10 @@ def table_command_to_database(table_id):
         'id': current.get('id'),
         'numStation': 2,
         'station0': last_station,
-        'station1': TABLE_POSITIONS[table_id],
+        'station1': TABLE_POSITIONS[int(table_id)],
         'turtlebot_state': current.get('turtlebot_state')
     })
-    print(f"Updated RTDB /actions/request to go first to {last_station['name']}, then to {TABLE_POSITIONS[table_id]['name']}")
+    print(f"Updated RTDB /actions/request to go first to {last_station['name']}, then to {TABLE_POSITIONS[int(table_id)]['name']}")
 
 # --------------------- Callback Firestore Listener ---------------------
 def on_voice_snapshot(col_snap, changes, _):
@@ -461,7 +463,9 @@ def finalize_record(doc):
             for item in raw_items
             if 'productKey' in item and 'quantity' in item
         ]
-        order_command_to_database(d['table'], order_items)
+        user_id = d.get("customerId", doc.id)
+        order_command_to_database(d['table'], order_items, user_id)
+
     elif d['type'] == 'Take Dishes':
         table_command_to_database(d['table'])
 
