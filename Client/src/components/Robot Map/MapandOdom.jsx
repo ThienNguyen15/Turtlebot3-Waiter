@@ -1,8 +1,18 @@
 import ROS_Config from '../../config/ros.config'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Card from 'react-bootstrap/Card'
+import { FaKitchenSet, MdTableRestaurant } from '../../assets/icons'
 import ROSLIB from 'roslib'
 window.ROSLIB = ROSLIB
+
+const tables = [
+  { description: "Table1", id: 1, x: -0.431466, y: -0.927929 },
+  { description: "Table2", id: 2, x: -0.3588424623012543, y: -1.6562724113464355 },
+  { description: "Table3", id: 3, x: -0.2888265550136566, y: -2.382502794265747 },
+  { description: "Table4", id: 4, x: 0.551529, y: -1.89651 },
+  { description: "Table5", id: 5, x: 0.450258, y: -0.924623 },
+  { description: "Kitchen", id: 10, x: -0.743725, y: -0.2899 }
+]
 
 function quaternionToYaw(orientation) {
   const { x, y, z, w } = orientation
@@ -13,6 +23,7 @@ function quaternionToYaw(orientation) {
 const MapandOdom = ({ ros, onOdomUpdate }) => {
   const mapCanvasRef = useRef(null)
   const robotCanvasRef = useRef(null)
+  const [mapMeta, setMapMeta] = useState({ width: 0, height: 0, resolution: 1, originX: 0, originY: 0, originYaw: 0 })
 
   useEffect(() => {
     if (!ros)
@@ -32,81 +43,66 @@ const MapandOdom = ({ ros, onOdomUpdate }) => {
       messageType: ROS_Config.AMCL_POSE_MSG,
     })
 
-    var mapWidth
-    var mapHeight
-    var mapResolution
-    var mapData
-    let originX = 0, originY = 0
+    mapClient.subscribe(map => {
+      const { width, height, resolution, origin } = map.info
+      const originYaw = quaternionToYaw(origin.orientation)
+      setMapMeta({ width, height, resolution, originX: origin.position.x, originY: origin.position.y, originYaw })
 
-    mapClient.subscribe(function(map) {
-      mapWidth = map.info.width
-      mapHeight = map.info.height
-      mapResolution = map.info.resolution
-      mapData = map.data
-
-      originX = map.info.origin.position.x
-      originY = map.info.origin.position.y
-
-      const mapCanvas = mapCanvasRef.current
-      const mapContext = mapCanvas.getContext('2d')
-      const scaleFactor = 1
-      mapCanvas.width = mapWidth * scaleFactor
-      mapCanvas.height = mapHeight * scaleFactor
-
-      for (var i = 0; i < mapWidth * mapHeight; i++) {
-          var occupancy = mapData[i]
-          var row = Math.floor(i / mapWidth)
-          var col = i % mapWidth
-
-          if (occupancy === 100) {
-              mapContext.fillStyle = '#000000'
-          } else if (occupancy === 0) {
-              mapContext.fillStyle = '#ffffff'
-          } else {
-              var gray = 255 - Math.round(occupancy * 2.55)
-              var color = 'rgb(' + gray + ',' + gray + ',' + gray + ')'
-              mapContext.fillStyle = color
-          }
-
-          mapContext.fillRect(
-            col * scaleFactor,
-            (mapHeight - row - 1) * scaleFactor,
-            scaleFactor,
-            scaleFactor
-          )
-      }
+      const canvas = mapCanvasRef.current
+      const ctx = canvas.getContext('2d')
+      canvas.width = width
+      canvas.height = height
+      map.data.forEach((cell, idx) => {
+        const row = Math.floor(idx / width)
+        const col = idx % width
+        if (cell === 100) ctx.fillStyle = '#000'
+        else if (cell === 0) ctx.fillStyle = '#fff'
+        else { const g = 255 - Math.round(cell * 2.55); ctx.fillStyle = `rgb(${g},${g},${g})` }
+        ctx.fillRect(col, height - row - 1, 1, 1)
+      })
     })
     
-    odomClient.subscribe(function(odom) {
-      const position = odom.pose.pose.position
-      const orientation = odom.pose.pose.orientation
-      const yaw = quaternionToYaw(orientation)
-      const odomState = { position, yaw }
-      if (onOdomUpdate) onOdomUpdate(odomState)
-      console.log('Position: ' + position.x + ',' + position.y + ',' + position.z)
-      console.log('Orientation: ' + orientation.x + ',' + orientation.y + ',' + orientation.z + ',' + orientation.w)
+    odomClient.subscribe(odom => {
+      const { position, orientation } = odom.pose.pose
+      const yawRad = quaternionToYaw(orientation)
+      onOdomUpdate?.({ position, yaw: yawRad * 180 / Math.PI })
 
-      const robotCanvas = robotCanvasRef.current
-      const robotContext = robotCanvas.getContext('2d')
+      const { width, height, resolution, originX, originY, originYaw } = mapMeta
+      if (!width) return
+      const rect = mapCanvasRef.current.getBoundingClientRect()
+      const scaleX = rect.width / width
+      const scaleY = rect.height / height
 
-      robotCanvas.width = mapWidth
-      robotCanvas.height = mapHeight
-      robotContext.clearRect(0, 0, robotCanvas.width, robotCanvas.height)
+      const robotCanvasCt = robotCanvasRef.current.getContext('2d')
+      robotCanvasRef.current.width = rect.width
+      robotCanvasRef.current.height = rect.height
+      robotCanvasCt.clearRect(0, 0, rect.width, rect.height)
+      let dx = position.x - originX
+      let dy = position.y - originY
 
-      const robotPositionX = (position.x - originX) / mapResolution
-      const robotPositionY = mapHeight - 1 - ((position.y - originY) / mapResolution)
+      const cos = Math.cos(-originYaw)
+      const sin = Math.sin(-originYaw)
+      const rx = dx * cos - dy * sin
+      const ry = dx * sin + dy * cos
+      const px = (rx / resolution) * scaleX
+      const py = ((height - ry / resolution) * scaleY)
+      robotCanvasCt.beginPath()
+      robotCanvasCt.fillStyle = '#f00'
+      robotCanvasCt.arc(px, py, 5, 0, 2 * Math.PI)
+      robotCanvasCt.fill()
 
-      robotContext.beginPath()
-      robotContext.fillStyle = '#FF0000'
-      robotContext.arc(robotPositionX, robotPositionY, 3, 0, 2 * Math.PI)
-      robotContext.fill()
+      tables.forEach(t => {
+        let tx = t.x - originX
+        let ty = t.y - originY
+        const ix = ( (tx * cos - ty * sin) / resolution ) * scaleX
+        const iy = ( height - ((tx * sin + ty * cos) / resolution) ) * scaleY
+        const sizePixel = ( (t.id === 10 ? 1 : 0.5) / resolution ) * scaleX
+        const Icon = t.id === 10 ? FaKitchenSet : MdTableRestaurant
+      })
     })
 
-    return () => {
-      mapClient.unsubscribe()
-      odomClient.unsubscribe()
-    }
-  }, [ros, onOdomUpdate])
+    return () => { mapClient.unsubscribe(); odomClient.unsubscribe() }
+  }, [ros, onOdomUpdate, mapMeta])
   
   return (
     <>
@@ -126,6 +122,40 @@ const MapandOdom = ({ ros, onOdomUpdate }) => {
                   ref={robotCanvasRef}
                   style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
                 ></canvas>
+
+                {mapMeta.width > 0 && tables.map(t => {
+                  const { width, height, resolution, originX, originY, originYaw } = mapMeta
+                  const rect = mapCanvasRef.current.getBoundingClientRect()
+                  const scaleX = rect.width / width
+                  const scaleY = rect.height / height
+                  const cos = Math.cos(-originYaw)
+                  const sin = Math.sin(-originYaw)
+                  const tx = t.x - originX
+                  const ty = t.y - originY
+                  const gx = (tx * cos - ty * sin) / resolution
+                  const gy = (tx * sin + ty * cos) / resolution
+                  const ix = gx * scaleX
+                  const iy = (height - gy) * scaleY
+                  const color = t.id === 10
+                    ? '#ff3333'
+                    : '#3396FF'
+                  const sizePixel = ((t.id === 10 ? 1 : 0.5) / resolution) * scaleX / 2.6
+                  const Icon = t.id === 10 ? FaKitchenSet : MdTableRestaurant
+                  return (
+                    <Icon
+                      key={t.id}
+                      size={sizePixel}
+                      color={color}
+                      style={{
+                        position: 'absolute',
+                        left: `${ix}px`,
+                        top: `${iy}px`,
+                        transform: 'translate(-50%, -50%)',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  )
+                })}
               </div>
             </Card.Text>
         </Card.Body>

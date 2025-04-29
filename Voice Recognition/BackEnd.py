@@ -40,26 +40,28 @@ db_fs     = firestore.client()
 bucket = storage.bucket()
 
 # --------------------- Command Dictionary ---------------------
-TABLE_POSITIONS = [
-  { "description": "Table0", "id": 0, "name": "Table0", "x": 0.00, "y": 0.00, "yaw": 90.00 },
-  { "description": "Table1", "id": 1, "name": "Table1", "x": 0.10, "y": 0.10, "yaw": 90.00 },
-  { "description": "Table2", "id": 2, "name": "Table2", "x": -0.20, "y": -0.20, "yaw": 90.00 },
-  { "description": "Table3", "id": 3, "name": "Table3", "x": 0.30, "y": 0.30, "yaw": 90.00 },
-  { "description": "Table4", "id": 4, "name": "Table4", "x": -0.40, "y": -0.40, "yaw": 90.00 },
-  { "description": "Table5", "id": 5, "name": "Table5", "x": 0.50, "y": 0.50, "yaw": 90.00 },
-  { "description": "Table6", "id": 6, "name": "Table6", "x": -0.60, "y": -0.60, "yaw": 90.00 },
-  { "description": "Table7", "id": 7, "name": "Table7", "x": 0.70, "y": 0.70, "yaw": 90.00 },
-  { "description": "Table8", "id": 8, "name": "Table8", "x": -0.80, "y": -0.80, "yaw": 90.00 },
-  { "description": "Table9", "id": 9, "name": "Table9", "x": 0.90, "y": 0.90, "yaw": 90.00 },
-  { "description": "Table10", "id": 10, "name": "Table10", "x": 1.00, "y": 1.00, "yaw": 90.00 }
-]
-
 # TABLE_POSITIONS = [
-#   { "description": "Table0", "id": 0, "name": "Table0", "x":-0.393977, "y":-0.754116, "yaw":17.336042 },
-#   { "description": "Table1", "id": 1, "name": "Table1", "x":-0.291475, "y":-1.501925, "yaw":-95.423714 },
-#   { "description": "Table2", "id": 2, "name": "Table2", "x":0.525429, "y":-1.832006, "yaw":82.580696 },
-#   { "description": "Table10", "id": 10, "name": "Table10", "x":0.618463, "y":-0.695112, "yaw":110.532781 }
+#   { "description": "Table0", "id": 0, "name": "Table0", "x": 0.00, "y": 0.00, "yaw": 90.00 },
+#   { "description": "Table1", "id": 1, "name": "Table1", "x": 0.10, "y": 0.10, "yaw": 90.00 },
+#   { "description": "Table2", "id": 2, "name": "Table2", "x": -0.20, "y": -0.20, "yaw": 90.00 },
+#   { "description": "Table3", "id": 3, "name": "Table3", "x": 0.30, "y": 0.30, "yaw": 90.00 },
+#   { "description": "Table4", "id": 4, "name": "Table4", "x": -0.40, "y": -0.40, "yaw": 90.00 },
+#   { "description": "Table5", "id": 5, "name": "Table5", "x": 0.50, "y": 0.50, "yaw": 90.00 },
+#   { "description": "Table6", "id": 6, "name": "Table6", "x": -0.60, "y": -0.60, "yaw": 90.00 },
+#   { "description": "Table7", "id": 7, "name": "Table7", "x": 0.70, "y": 0.70, "yaw": 90.00 },
+#   { "description": "Table8", "id": 8, "name": "Table8", "x": -0.80, "y": -0.80, "yaw": 90.00 },
+#   { "description": "Table9", "id": 9, "name": "Table9", "x": 0.90, "y": 0.90, "yaw": 90.00 },
+#   { "description": "Table10", "id": 10, "name": "Table10", "x": 1.00, "y": 1.00, "yaw": 90.00 }
 # ]
+
+TABLE_POSITIONS = [
+  { "description": "Table1", id: 1, "name": "Table1", "x": -0.431466, "y": -0.927929, "yaw": -64.7273 },
+  { "description": "Table2", id: 2, "name": "Table2", "x": -0.3588424623012543, "y": -1.6562724113464355, "yaw": -82.872 },
+  { "description": "Table3", id: 3, "name": "Table3", "x": -0.2888265550136566, "y": -2.382502794265747, "yaw": -58.5126 },
+  { "description": "Table4", id: 4, "name": "Table4", "x": 0.551529, "y": -1.89651, "yaw": 90.9495 },
+  { "description": "Table5", id: 5, "name": "Table5", "x": 0.450258, "y": -0.924623, "yaw": 101.275 },
+  { "description": "Kitchen", id: 10, "name": "Table10", "x": -0.743725, "y": -0.2899, "yaw": -78.5854 }
+]
 
 start_table_id = 0
 end_table_id = 10
@@ -352,7 +354,8 @@ def table_command_to_database(table_id):
     """
         Push movement command to Database in the correct format
     """
-    ref = rtdb.reference('actions/request')
+    ref = rtdb.reference('request')
+    # ref = rtdb.reference('actions/request')
     current = ref.get()
     if not current:
         print("No existing request node")
@@ -376,7 +379,7 @@ def table_command_to_database(table_id):
         'station1': TABLE_POSITIONS[int(table_id)],
         'turtlebot_state': current.get('turtlebot_state')
     })
-    print(f"Updated RTDB /actions/request to go first to {last_station['name']}, then to {TABLE_POSITIONS[int(table_id)]['name']}")
+    print(f"Updated Real-Time to go first to {last_station['name']}, then to {TABLE_POSITIONS[int(table_id)]['name']}")
 
 # --------------------- Callback Firestore Listener ---------------------
 def on_voice_snapshot(col_snap, changes, _):
