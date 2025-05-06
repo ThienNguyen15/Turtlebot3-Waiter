@@ -3,7 +3,7 @@ import { ref, set, onValue } from 'firebase/database'
 import { realtimedb, dbFirestore } from '../../config/firebase.config.js'
 import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore'
 import Card from 'react-bootstrap/Card'
-import { Modal, Button, Row, Col } from 'react-bootstrap'
+import { Row, Col } from 'react-bootstrap'
 import { Turtlebot } from '../../assets'
 import { GiConfirmed } from '../../assets/icons'
 
@@ -18,6 +18,7 @@ const tables = [
 
 const RealTimeDB = ({ ros, odom }) => {
   const [activeTables, setActiveTables] = useState([])
+  const [pressedTables, setPressedTables] = useState([])
   const [showConfirm, setShowConfirm] = useState(false)
   const [confirmAction, setConfirmAction] = useState(null)
   const userActionRef = useRef(false)
@@ -57,7 +58,10 @@ const RealTimeDB = ({ ros, odom }) => {
     const dbRef = ref(realtimedb, 'request')
     if (confirmAction === 'send') {
       set(dbRef, action)
-        .then(() => setActiveTables([]))
+        .then(() => {
+          setPressedTables([]) // Un-Highlight UI
+          userActionRef.current = false // Flag for allow to reset after
+        })
         .catch(err => console.error(err))
     } else {
       set(dbRef, { id: 0 })
@@ -101,7 +105,7 @@ const RealTimeDB = ({ ros, odom }) => {
   }, [activeTables])
 
   useEffect(() => {
-    if (!activeTables.length) return setOrderDisplayText("No table selected")
+    if (!activeTables.length) return setOrderDisplayText("Relaxing Time")
     const idx = isReachStation
     const tableId = activeTables[idx]
     if (tableId === 10) {
@@ -114,22 +118,34 @@ const RealTimeDB = ({ ros, odom }) => {
             .catch(console.error)
         }
       }
-      setOrderDisplayText(`Order Details Station ${idx + 1}`)
+      if (idx < activeTables.length)
+        setOrderDisplayText(`Order Details Station ${idx + 1}`)
+      else
+        setOrderDisplayText("Food Delivered")
     }
   }, [activeTables, orderInfoStations, isReachStation])
 
   const currentDesc = tables.find(t => t.id === activeTables[isReachStation])?.description || ''
 
   const toggleTable = (tableId) => {
+    if (!userActionRef.current) {
+      setActiveTables([])         // Reset logic
+      setPressedTables([])        // Reset UI
+    }
     userActionRef.current = true
+  
+    setPressedTables(prev =>
+      prev.includes(tableId) ? prev.filter(id => id !== tableId) : [...prev, tableId]
+    )
+  
     setActiveTables(prev =>
       prev.includes(tableId) ? prev.filter(id => id !== tableId) : [...prev, tableId]
     )
   }
 
-  const getButtonStyle = () => ({
+  const getButtonStyle = (isActive) => ({
     width: '90px', height: '40px', padding: '8px 12px', borderRadius: '4px', border: 'none',
-    fontWeight: 'bold', fontSize: '16px', backgroundColor: '#E6F1FF',
+    fontWeight: 'bold', fontSize: '16px', backgroundColor: isActive ? '#66B0FF' : '#E6F1FF',
     cursor: 'pointer', transition: 'background-color 0.3s'
   })
 
@@ -156,20 +172,20 @@ const RealTimeDB = ({ ros, odom }) => {
 
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginTop: '16px' }}>
             <div>
-              <button onClick={() => toggleTable(10)} style={getButtonStyle(activeTables.includes(10))}>
+              <button onClick={() => toggleTable(10)} style={getButtonStyle(pressedTables.includes(10))}>
                 Kitchen
               </button>
             </div>
             <div style={{ display: 'flex', gap: '30px' }}>
-              <button onClick={() => toggleTable(1)} style={getButtonStyle(activeTables.includes(1))}>Table1</button>
-              <button onClick={() => toggleTable(2)} style={getButtonStyle(activeTables.includes(2))}>Table2</button>
+              <button onClick={() => toggleTable(1)} style={getButtonStyle(pressedTables.includes(1))}>Table1</button>
+              <button onClick={() => toggleTable(2)} style={getButtonStyle(pressedTables.includes(2))}>Table2</button>
             </div>
             <div style={{ display: 'flex', gap: '30px' }}>
-              <button onClick={() => toggleTable(3)} style={getButtonStyle(activeTables.includes(3))}>Table3</button>
-              <button onClick={() => toggleTable(4)} style={getButtonStyle(activeTables.includes(4))}>Table4</button>
+              <button onClick={() => toggleTable(3)} style={getButtonStyle(pressedTables.includes(3))}>Table3</button>
+              <button onClick={() => toggleTable(4)} style={getButtonStyle(pressedTables.includes(4))}>Table4</button>
             </div>
             <div>
-              <button onClick={() => toggleTable(5)} style={getButtonStyle(activeTables.includes(5))}>
+              <button onClick={() => toggleTable(5)} style={getButtonStyle(pressedTables.includes(5))}>
                 Table5
               </button>
             </div>

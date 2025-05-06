@@ -208,7 +208,7 @@ const RealTimeDB = ({ ros, odom }) => {
     })
     return () => unsubscribe()
   }, [])
-  
+
   // Read Some Value Data from RealTime DB
   useEffect(() => {
     const actionsRef = ref(realtimedb, 'actions')
@@ -219,7 +219,7 @@ const RealTimeDB = ({ ros, odom }) => {
     })
     return () => unsubscribe()
   }, [])
-  
+
   // Query Firestore
   useEffect(() => {
     if (activeTables.length === 0)
@@ -245,12 +245,12 @@ const RealTimeDB = ({ ros, odom }) => {
     })
     return () => unsubscribe()
   }, [activeTables])
-  
+
   // currentOrder from orderInfoStations based on isReachStation value
   const currentOrder = (activeTables.length > 0 && isReachStation < activeTables.length)
     ? orderInfoStations[isReachStation]
     : null
-  
+
   // Update Firestore, UI for each case
   useEffect(() => {
     if (activeTables.length === 0)
@@ -258,7 +258,7 @@ const RealTimeDB = ({ ros, odom }) => {
       setOrderDisplayText("No table selected")
       return
     }
-  
+
     const currentTable = activeTables[isReachStation]
 
     if (isReachStation === 0)
@@ -283,7 +283,7 @@ const RealTimeDB = ({ ros, odom }) => {
       }
       else
         console.warn("No order found to update for prevIndex:", prevIndex)
-  
+
       if (isReachStation < activeTables.length)
         setOrderDisplayText(`Order Details Station ${isReachStation + 1}`)
       else
