@@ -7,9 +7,6 @@ import { Row, Col } from 'react-bootstrap'
 import { Turtlebot } from '../../assets'
 import { GiConfirmed } from '../../assets/icons'
 
-// Global counter for reached stations
-let reachStation = 0
-
 // const tables = [
 //   { description: "Table1", id: 1, name: "Table1", x: 1, y: 0, yaw: -64.7273 },
 //   { description: "Table2", id: 2, name: "Table2", x: 2, y: 0, yaw: -82.872 },
@@ -32,10 +29,12 @@ const RealTimeDB = ({ ros, odom }) => {
   const [activeTables, setActiveTables] = useState([])
   const [pressedTables, setPressedTables] = useState([])
   const [showConfirm, setShowConfirm] = useState(false)
+  const [confirmAction, setConfirmAction] = useState(null)
+  const userActionRef = useRef(false)
+
+  const [isReachStation, setIsReachStation] = useState(0)
   const [orderInfoStations, setOrderInfoStations] = useState([])
   const [orderDisplayText, setOrderDisplayText] = useState("")
-  const [positionRT, setPositionRT] = useState({ x: 0, y: 0, yaw: 0 }) // Real-time position
-  const userActionRef = useRef(null)
 
   const generateTurtlebotState = () => ({
     battery: odom ? 80 : 100,
@@ -46,12 +45,11 @@ const RealTimeDB = ({ ros, odom }) => {
 
   const buildActionFromTables = (tablesList) => {
     let request
-    if (tablesList.length === 0)
+    if (tablesList.length === 0) {
       request = { id: 0 }
-    else if (tablesList.length === 1 && tablesList[0] === 10)
+    } else if (tablesList.length === 1 && tablesList[0] === 10) {
       request = { id: 1, numStation: 1, station0: tables.find(t => t.id === 10) }
-    else
-    {
+    } else {
       const rest = tablesList.filter(id => id !== 10)
       request = { id: 2, numStation: rest.length }
       rest.forEach((id, idx) => {
@@ -61,78 +59,44 @@ const RealTimeDB = ({ ros, odom }) => {
     return { request, turtlebot_state: generateTurtlebotState() }
   }
 
-  const handleSendClick = () => { userActionRef.current = 'send'; setShowConfirm(true) }
-  const handleCancelClick = () => { userActionRef.current = 'cancel'; setShowConfirm(true) }
-
+  const handleSendClick = () => { setConfirmAction('send'); setShowConfirm(true) }
+  const handleCancelClick = () => { setConfirmAction('cancel'); setShowConfirm(true) }
   const handleConfirm = () => {
+    setShowConfirm(false)
     const action = buildActionFromTables(activeTables)
     const dbRef = ref(realtimedb, 'request')
-    set(dbRef, userActionRef.current === 'send' ? action : { id: 0 })
-      .then(() => {
-        if (userActionRef.current === 'send')
-        {
-          setPressedTables([])
+    if (confirmAction === 'send') {
+      set(dbRef, action)
+        .then(() => {
+          setPressedTables([]) // Un-Highlight UI
           userActionRef.current = false // Flag for allow to reset after
-        }
-        else setActiveTables([])
-        reachStation = 0
-      })
-      .catch(err => console.error(err))
-    setShowConfirm(false)
+        })
+        .catch(err => console.error(err))
+    } else {
+      set(dbRef, { id: 0 })
+        .then(() => setActiveTables([]))
+        .catch(err => console.error(err))
+    }
   }
 
-  // Subscribe to position updates from RealtimeDB
   useEffect(() => {
-    const posRef = ref(realtimedb, 'request/turtlebot_state/position')
-    const off = onValue(posRef, snap => {
-      const p = snap.val() || {}
-      setPositionRT({ x: p.x || 0, y: p.y || 0 })
-    })
-    return () => off()
-  }, [])
-
-  // Listen for new active tables
-  useEffect(() => {
-    const reqRef = ref(realtimedb, 'request/request')
+    const reqRef = ref(realtimedb, 'request')
     const off = onValue(reqRef, snap => {
       const data = snap.val() || {}
+      if (!data.request) return
       const ids = []
-      for (let i = 0; i < (data.numStation || 0); i++)
-      {
-        const st = data[`station${i}`]
+      const num = data.request.numStation || 0
+      for (let i = 0; i < num; i++) {
+        const st = data.request[`station${i}`]
         if (st?.id !== undefined) ids.push(st.id)
       }
       setActiveTables(ids)
+      if (data.turtlebot_state?.isReachStation !== undefined)
+        setIsReachStation(data.turtlebot_state.isReachStation)
     })
     return () => off()
   }, [])
 
-  // Detect station reach using positionRT
-  useEffect(() => {
-    if (!activeTables.length) setOrderDisplayText('Relaxing Time')
-    const tol = 0.000999
-    const idx = reachStation
-    const target = tables.find(t => t.id === activeTables[idx])
-    if (target && Math.abs(positionRT.x - target.x) <= tol && Math.abs(positionRT.y - target.y) <= tol)
-    {
-      const prevIdx = reachStation
-      reachStation++
-      const prevOrder = orderInfoStations[prevIdx]
-      if (prevOrder?.orderId)
-      {
-        updateDoc(doc(dbFirestore, 'orders', prevOrder.orderId), { is_reach: 1 })
-          .catch(err => console.error(err))
-      }
-    }
-    if (activeTables.includes(10))
-      setOrderDisplayText('Taking new Dishes')
-    else if (reachStation === activeTables.length)
-      setOrderDisplayText('Food Delivered')
-    else if (reachStation !== activeTables.length)
-      setOrderDisplayText(`Order Details Station ${idx + 1}`)
-  }, [positionRT, activeTables, orderInfoStations])
-
-  // Subscribe to Firestore orders
   useEffect(() => {
     if (!activeTables.length) return setOrderInfoStations([])
     const ordersRef = collection(dbFirestore, 'orders')
@@ -149,7 +113,28 @@ const RealTimeDB = ({ ros, odom }) => {
     return () => unsub()
   }, [activeTables])
 
-  const currentDesc = tables.find(t => t.id === activeTables[reachStation])?.description || ''
+  useEffect(() => {
+    if (!activeTables.length) return setOrderDisplayText("Relaxing Time")
+    const idx = isReachStation
+    const tableId = activeTables[idx]
+    if (tableId === 10) {
+      setOrderDisplayText("Taking new dishes")
+    } else {
+      if (idx > 0) {
+        const prevOrder = orderInfoStations[idx - 1]
+        if (prevOrder?.orderId) {
+          updateDoc(doc(dbFirestore, 'orders', prevOrder.orderId.toString()), { is_reach: 1 })
+            .catch(console.error)
+        }
+      }
+      if (idx < activeTables.length)
+        setOrderDisplayText(`Order Details Station ${idx + 1}`)
+      else
+        setOrderDisplayText("Food Delivered")
+    }
+  }, [activeTables, orderInfoStations, isReachStation])
+
+  const currentDesc = tables.find(t => t.id === activeTables[isReachStation])?.description || ''
 
   const toggleTable = (tableId) => {
     if (!userActionRef.current) {
@@ -157,9 +142,11 @@ const RealTimeDB = ({ ros, odom }) => {
       setPressedTables([])        // Reset UI
     }
     userActionRef.current = true
+  
     setPressedTables(prev =>
       prev.includes(tableId) ? prev.filter(id => id !== tableId) : [...prev, tableId]
     )
+  
     setActiveTables(prev =>
       prev.includes(tableId) ? prev.filter(id => id !== tableId) : [...prev, tableId]
     )
@@ -213,8 +200,8 @@ const RealTimeDB = ({ ros, odom }) => {
             </div>
 
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={handleSendClick} style={getSendStyle()}>Send</button>
-              <button onClick={handleCancelClick} style={getCancelStyle()}>Cancel</button>
+              <button onClick={handleSendClick} style={getSendStyle(false)}>Send</button>
+              <button onClick={handleCancelClick} style={getCancelStyle(false)}>Cancel</button>
             </div>
           </div>
 
@@ -226,8 +213,8 @@ const RealTimeDB = ({ ros, odom }) => {
             <Col xs={8}>
               <p style={{ fontWeight: 'bold', fontSize: '1rem' }}>{orderDisplayText}</p>
               <div style={{ marginTop: '5px', maxHeight: '100px', overflowY: 'auto' }}>
-                {(orderDisplayText.startsWith('Order Details') || orderDisplayText === 'Food Delivered') && orderInfoStations[reachStation]?.items?.length
-                  ? orderInfoStations[reachStation].items.map((item, i) => <p key={i}>{item.product_name} x {item.quantity}</p>)
+                {(orderDisplayText.startsWith('Order Details') || orderDisplayText === 'Food Delivered') && orderInfoStations[isReachStation]?.items?.length
+                  ? orderInfoStations[isReachStation].items.map((item, i) => <p key={i}>{item.product_name} x {item.quantity}</p>)
                   : <p>No details available!</p>
                 }
               </div>
@@ -251,7 +238,7 @@ const RealTimeDB = ({ ros, odom }) => {
             </div>
             {/* Body */}
             <p className="mb-6 text-xl">
-              {userActionRef.current === 'send'
+              {confirmAction === 'send'
                 ? 'Do you want to send the selected requests?'
                 : 'Do you want to cancel the selected requests?'}
             </p>
@@ -261,12 +248,12 @@ const RealTimeDB = ({ ros, odom }) => {
                 onClick={handleConfirm}
                 className={
                   `px-3 py-2 rounded-lg transition text-base ` +
-                  (userActionRef.current === 'send'
+                  (confirmAction === 'send'
                     ? 'bg-green-500 hover:bg-green-600 text-white'
                     : 'bg-red-500 hover:bg-red-600 text-white')
                 }
               >
-                {userActionRef.current === 'send' ? 'Send' : 'Cancel'}
+                {confirmAction === 'send' ? 'Send' : 'Cancel'}
               </button>
               <button
                 onClick={() => setShowConfirm(false)}
