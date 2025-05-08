@@ -11,8 +11,6 @@ from dotenv import load_dotenv
 import firebase_admin
 from firebase_admin import credentials, firestore, storage, db as rtdb
 
-import json
-
 # import uuid
 # from flask import Flask, request, jsonify
 # from flask_cors import CORS
@@ -57,12 +55,12 @@ bucket = storage.bucket()
 # ]
 
 TABLE_POSITIONS = [
-  { "description": "Table1", "id": 1, "name": "Table1", "x": -0.431466, "y": -0.927929, "yaw": -64.7273 },
-  { "description": "Table2", "id": 2, "name": "Table2", "x": -0.3588424623012543, "y": -1.6562724113464355, "yaw": -82.872 },
-  { "description": "Table3", "id": 3, "name": "Table3", "x": -0.2888265550136566, "y": -2.382502794265747, "yaw": -58.5126 },
-  { "description": "Table4", "id": 4, "name": "Table4", "x": 0.551529, "y": -1.89651, "yaw": 90.9495 },
-  { "description": "Table5", "id": 5, "name": "Table5", "x": 0.450258, "y": -0.924623, "yaw": 101.275 },
-  { "description": "Kitchen", "id": 10, "name": "Table10", "x": -0.743725, "y": -0.2899, "yaw": -78.5854 }
+  { "description": "Table1", id: 1, "name": "Table1", "x": -0.431466, "y": -0.927929, "yaw": -64.7273 },
+  { "description": "Table2", id: 2, "name": "Table2", "x": -0.3588424623012543, "y": -1.6562724113464355, "yaw": -82.872 },
+  { "description": "Table3", id: 3, "name": "Table3", "x": -0.2888265550136566, "y": -2.382502794265747, "yaw": -58.5126 },
+  { "description": "Table4", id: 4, "name": "Table4", "x": 0.551529, "y": -1.89651, "yaw": 90.9495 },
+  { "description": "Table5", id: 5, "name": "Table5", "x": 0.450258, "y": -0.924623, "yaw": 101.275 },
+  { "description": "Kitchen", id: 10, "name": "Table10", "x": -0.743725, "y": -0.2899, "yaw": -78.5854 }
 ]
 
 start_table_id = 0
@@ -352,34 +350,35 @@ def order_command_to_database(table_id, order_items, user_id="None"):
     db_fs.collection("orders").document(str(order_data["orderId"])).set(order_data)
     print(f"Order added to Firestore with total amount: {total}")
 
-def table_command_to_database(table_ids):
+def table_command_to_database(table_id):
     """
         Push movement command to Database in the correct format
     """
-    if not isinstance(table_ids, (list, tuple)):
-        table_ids = [table_ids]
-
-    ref     = rtdb.reference('request/request')
+    ref = rtdb.reference('actions/request')
     current = ref.get()
     if not current:
         print("No existing request node")
         return
 
-    new_num = len(table_ids)
+    num = current.get('numStation', 0)
+    if num < 0:
+        print("Invalid numStation")
+        return
 
-    update_data = {
-        'id':             2,
-        'numStation':     new_num,
+    last_idx = num - 1
+    last_station = current.get(f'station{last_idx}')
+    if not last_station:
+        print(f"station{last_idx} not found")
+        return
+
+    ref.update({
+        'id': current.get('id'),
+        'numStation': 2,
+        'station0': last_station,
+        'station1': TABLE_POSITIONS[int(table_id)],
         'turtlebot_state': current.get('turtlebot_state')
-    }
-
-    for idx, tid in enumerate(table_ids):
-        i = int(tid) - 1
-        update_data[f'station{idx}'] = TABLE_POSITIONS[int(i)]
-
-    ref.update(update_data)
-    dest_names = [ TABLE_POSITIONS[int(t)-1]['name'] for t in table_ids ]
-    print(f"Updated Real-Time path: {dest_names}")
+    })
+    print(f"Updated Real-Time to go first to {last_station['name']}, then to {TABLE_POSITIONS[int(table_id)]['name']}")
 
 # --------------------- Callback Firestore Listener ---------------------
 def on_voice_snapshot(col_snap, changes, _):
@@ -426,28 +425,6 @@ def process_record(doc):
     cmd_type = "Unknown"
     proc_text = "⚠️ Doesn't match any commands."
     orders = []
-    items_data = []
-
-    if normalized.count("table") > 1:
-        table_words = re.findall(r'\btable\s+(\w+)\b', normalized, flags=re.IGNORECASE)
-        valid_words = {
-            "zero":"0","one":"1","two":"2","three":"3","four":"4",
-            "five":"5","six":"6","seven":"7","eight":"8","nine":"9","ten":"10"
-        }
-        table_ids = [ valid_words.get(w.lower(), w) for w in table_words ]
-
-        cmd_type  = "Take Dishes"
-        proc_text = "Go to tables " + ", ".join(f"table {w}" for w in table_words)
-
-        doc.reference.update({
-            'original': normalized,
-            'processed': proc_text,
-            'type':      cmd_type,
-            'table':     table_ids,
-            'items':     items_data,
-            'duration':  duration
-        })
-        return
 
     if table_id is not None:
         segments = (parse_multiple_orders(content)
