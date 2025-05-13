@@ -62,7 +62,7 @@ TABLE_POSITIONS = [
   { "description": "Table3", "id": 3, "name": "Table3", "x": -0.2888265550136566, "y": -2.382502794265747, "yaw": -58.5126 },
   { "description": "Table4", "id": 4, "name": "Table4", "x": 0.551529, "y": -1.89651, "yaw": 90.9495 },
   { "description": "Table5", "id": 5, "name": "Table5", "x": 0.450258, "y": -0.924623, "yaw": 101.275 },
-  { "description": "Kitchen", "id": 10, "name": "Table10", "x": -0.743725, "y": -0.2899, "yaw": -78.5854 }
+  { "description": "Kitchen", "id": 6, "name": "Table10", "x": -0.743725, "y": -0.2899, "yaw": -78.5854 }
 ]
 
 start_table_id = 0
