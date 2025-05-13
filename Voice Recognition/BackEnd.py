@@ -359,7 +359,7 @@ def table_command_to_database(table_ids):
     if not isinstance(table_ids, (list, tuple)):
         table_ids = [table_ids]
 
-    ref     = rtdb.reference('request/request')
+    ref     = rtdb.reference('action/request')
     current = ref.get()
     if not current:
         print("No existing request node")
@@ -369,8 +369,7 @@ def table_command_to_database(table_ids):
 
     update_data = {
         'id':             2,
-        'numStation':     new_num,
-        'turtlebot_state': current.get('turtlebot_state')
+        'numStation':     new_num
     }
 
     for idx, tid in enumerate(table_ids):

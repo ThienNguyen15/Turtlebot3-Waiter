@@ -66,7 +66,7 @@ const RealTimeDB = ({ ros, odom }) => {
 
   const handleConfirm = () => {
     const action = buildActionFromTables(activeTables)
-    const dbRef = ref(realtimedb, 'request')
+    const dbRef = ref(realtimedb, 'action')
     set(dbRef, userActionRef.current === 'send' ? action : { id: 0 })
       .then(() => {
         if (userActionRef.current === 'send')
@@ -83,7 +83,7 @@ const RealTimeDB = ({ ros, odom }) => {
 
   // Subscribe to position updates from RealtimeDB
   useEffect(() => {
-    const posRef = ref(realtimedb, 'request/turtlebot_state/position')
+    const posRef = ref(realtimedb, 'action/turtlebot_state/position')
     const off = onValue(posRef, snap => {
       const p = snap.val() || {}
       setPositionRT({ x: p.x || 0, y: p.y || 0 })
@@ -93,7 +93,7 @@ const RealTimeDB = ({ ros, odom }) => {
 
   // Listen for new active tables
   useEffect(() => {
-    const reqRef = ref(realtimedb, 'request/request')
+    const reqRef = ref(realtimedb, 'action/request')
     const off = onValue(reqRef, snap => {
       const data = snap.val() || {}
       const ids = []
