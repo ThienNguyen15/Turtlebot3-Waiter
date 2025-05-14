@@ -372,11 +372,10 @@ def table_command_to_database(table_id):
         return
 
     ref.update({
-        'id': current.get('id'),
+        'id': 1,
         'numStation': 2,
         'station0': last_station,
-        'station1': TABLE_POSITIONS[int(table_id)],
-        'turtlebot_state': current.get('turtlebot_state')
+        'station1': TABLE_POSITIONS[int(table_id)]
     })
     print(f"Updated Real-Time to go first to {last_station['name']}, then to {TABLE_POSITIONS[int(table_id)]['name']}")
 
