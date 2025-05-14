@@ -366,9 +366,10 @@ def table_command_to_database(table_ids):
         return
 
     new_num = len(table_ids)
+    id_val = 1 if new_num == 1 and int(table_ids[0]) == 6 else 2
 
     update_data = {
-        'id':             2,
+        'id':             id_val,
         'numStation':     new_num
     }
 
