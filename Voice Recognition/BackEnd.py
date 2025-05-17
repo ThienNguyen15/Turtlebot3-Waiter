@@ -10,6 +10,7 @@ from difflib import SequenceMatcher
 from dotenv import load_dotenv
 import firebase_admin
 from firebase_admin import credentials, firestore, storage, db as rtdb
+import warnings
 
 import json
 
@@ -28,7 +29,7 @@ MODEL_PATH = r"C:/GIT/_CapStone Project_/Voice Recognition/Speech2Text/whisper.c
 
 # UPLOAD_FOLDER = "uploads"
 # os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
+warnings.filterwarnings("ignore", category=UserWarning)
 load_dotenv()
 storage_bucket = os.getenv('STORAGE_BUCKET')
 database_url   = os.getenv('DATABASE_URL')
@@ -319,38 +320,112 @@ def order_command_to_database(table_id, order_items, user_id="None"):
             # "item_total": item_total
         })
 
-    customer = {
-        "address": {
-            "city": None,
-            "country": "VN",
-            "line1": None,
-            "line2": None,
-            "postal_code": None,
-            "state": None
-        },
-        "email": "None",
-        "name": "None",
-        "phone": "None",
-        "tax_exempt": "None",
-        "tax_ids": []
-    }
+    existing_orders = db_fs.collection("orders")\
+        .where("userId", "==", user_id)\
+        .where("is_reach", "==", 0)\
+        .stream()
 
-    order_data = {
-        "customer": customer,
-        "intenId": "None",
-        "is_reach": 0,
-        "items": items,
-        "orderId": int(time.time() * 1000),
-        "payment_method_types": ["cash"],
-        "progress": "preparing",
-        "status": "cash",
-        "table": table_id,
-        "total": total,
-        "userId": user_id
-    }
+    order_doc = next(existing_orders, None)
 
-    db_fs.collection("orders").document(str(order_data["orderId"])).set(order_data)
-    print(f"Order added to Firestore with total amount: {total}")
+    if order_doc:
+        order_ref = db_fs.collection("orders").document(order_doc.id)
+        current_data = order_doc.to_dict()
+
+        updated_items = current_data.get("items", [])
+        for new_item in items:
+            found = False
+            for existing_item in updated_items:
+                if existing_item["productId"] == new_item["productId"]:
+                    existing_item["quantity"] = int(existing_item["quantity"]) + int(new_item["quantity"])
+                    found = True
+                    break
+            if not found:
+                new_item["quantity"] = int(new_item["quantity"])
+                updated_items.append(new_item)
+
+        new_total = sum(float(item["product_price"]) * int(item["quantity"]) for item in updated_items)
+        methods = ["cash"]
+        status = "cash"
+
+        update_data = {
+            "items": updated_items,
+            "total": new_total,
+            "payment_method_types": methods,
+            "status": status
+        }
+
+        if current_data.get("payment_method_types") == ["card"]:
+            update_data["amount_paid"] = current_data.get("total", 0)
+
+        order_ref.update(update_data)
+        print(f"Updated existing order {order_doc.id} for user {user_id}.")
+
+    else:
+        customer = {
+            "address": {
+                "city": None,
+                "country": "VN",
+                "line1": None,
+                "line2": None,
+                "postal_code": None,
+                "state": None
+            },
+            "email": "None",
+            "name": "None",
+            "phone": "None",
+            "tax_exempt": "None",
+            "tax_ids": []
+        }
+
+        order_data = {
+            "customer": customer,
+            "intentId": "None",
+            "is_reach": 0,
+            "items": items,
+            "orderId": int(time.time() * 1000),
+            "payment_method_types": ["cash"],
+            "progress": "preparing",
+            "status": "cash",
+            "table": table_id,
+            "total": total,
+            "userId": user_id
+        }
+
+        db_fs.collection("orders").document(str(order_data["orderId"])).set(order_data)
+        print(f"Order created with ID {order_data['orderId']} and total {total}.")
+
+    # customer = {
+    #     "address": {
+    #         "city": None,
+    #         "country": "VN",
+    #         "line1": None,
+    #         "line2": None,
+    #         "postal_code": None,
+    #         "state": None
+    #     },
+    #     "email": "None",
+    #     "name": "None",
+    #     "phone": "None",
+    #     "tax_exempt": "None",
+    #     "tax_ids": []
+    # }
+
+    # order_data = {
+    #     "customer": customer,
+    #     "intenId": "None",
+    #     "is_reach": 0,
+    #     "items": items,
+    #     "orderId": int(time.time() * 1000),
+    #     "payment_method_types": ["cash"],
+    #     "progress": "preparing",
+    #     "status": "cash",
+    #     "table": table_id,
+    #     "total": total,
+    #     "userId": user_id
+    # }
+
+    # db_fs.collection("orders").document(str(order_data["orderId"])).set(order_data)
+    # print(f"Order added to Firestore with total amount: {total}")
 
 def table_command_to_database(table_ids):
     """
