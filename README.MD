@@ -1,4 +1,4 @@
-# CapStone Project - Developing an Autonomous Robot on Turtlebot3-Burger Platform
+# CapStone - Developing an Autonomous Robot on Turtlebot3-Burger Platform
 
 ## Software Architecture
 <p align="center">
@@ -19,3 +19,4 @@
 <p align="center">
   <img src="https://github.com/user-attachments/assets/8fdf1f06-044d-4fdd-84b5-d5a2026f8648" width="750" />
 </p>
+
