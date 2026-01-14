@@ -1,3 +1,7 @@
 # CapStone Project - Developing an Autonomous Robot on Turtlebot3-Burger Platform
 
+## Software Architecture
 ![Software](https://github.com/user-attachments/assets/df17e9cd-ac10-4ea8-853a-409ab82019c1)
+
+## Tracking Turtlebot Actions
+![Tracking Turtlebot Actions 2](https://github.com/user-attachments/assets/15dbaaae-3761-432f-b0f0-e71f1d2d86d1)
