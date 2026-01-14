@@ -1,0 +1,41 @@
+# systemd unit file for the Python Demo Service
+
+
+[Unit]
+
+# Human readable name of the unit
+Description=turtlebot3_tourguide
+After=network-online.target
+
+[Service]
+
+Type=simple
+User=root
+Environment="HOME=root"
+Environment="ROS_DOMAIN_ID=30"
+Environment="TURTLEBOT3_MODEL=burger"
+Environment="LDS_MODEL=LD-19"
+Environment="RMW_IMPLEMENTATION=rmw_cyclonedds_cpp"
+
+# Command to execute when the service is started
+ExecStart=/bin/bash -c 'source /root/.bashrc; source /opt/ros/humble/setup.bash; source /root/turtlebot3_ws/install/setup.bash; /usr/bin/python3 /root/launcher.py;'
+
+# Disable Python's buffering of STDOUT and STDERR, so that output from the
+# service shows up immediately in systemd's logs
+
+# Automatically restart the service if it crashes
+#Restart=on-failure
+
+# Our service will notify systemd once it is up and running
+#Type=notify
+
+# Use a dedicated user to run our service
+
+StartLimitBurst=0
+#StartLimitInterval=30
+
+[Install]
+
+# Tell systemd to automatically start this service when the system boots
+# (assuming the service is enabled)
+WantedBy=multi-user.target
