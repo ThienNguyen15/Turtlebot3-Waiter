@@ -8,3 +8,6 @@
 
 ## Restaurant Homepage
 ![Customer Page Home](https://github.com/user-attachments/assets/d2d7a3be-298e-4623-84c7-6b52b3439109)
+
+## Voice Regconition
+<img width="1762" height="974" alt="image" src="https://github.com/user-attachments/assets/8fdf1f06-044d-4fdd-84b5-d5a2026f8648" />
